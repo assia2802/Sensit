@@ -156,7 +156,7 @@ if analyze_btn:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        tone = "Bullish" if result.net_score > 0.05 else "Bearish" if result.net_score < -0.05 else "Neutral"
+        tone = "Bullish" if result.net_score > 0.1 else "Bearish" if result.net_score < -0.1 else "Neutral"
         st.metric(
             "News Sentiment",
             f"{result.net_score:+.3f}",
