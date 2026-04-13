@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/Users/walidamar/Code/Assia/entretien/venv/bin/pip install:*)",
+      "Bash(./venv/bin/streamlit run:*)",
+      "Bash(open:*)",
+      "Bash(curl -s \"https://financialmodelingprep.com/api/v3/earning_call_transcript/AAPL?quarter=3&year=2020&apikey=demo\")",
+      "Bash(curl -s \"https://site.financialmodelingprep.com/developer/docs\")",
+      "WebSearch",
+      "WebFetch(domain:site.financialmodelingprep.com)",
+      "WebFetch(domain:financialmodelingprep.com)",
+      "Bash(curl -s -H \"User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36 \\(KHTML, like Gecko\\) Chrome/120.0.0.0 Safari/537.36\" -H \"Accept: text/html,application/xhtml+xml\" \"https://site.financialmodelingprep.com/developer/docs/earning-call-transcript-api\")",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:finnhub.io)",
+      "WebFetch(domain:api-ninjas.com)",
+      "WebFetch(domain:earningscall.biz)",
+      "Bash(curl -s -H \"User-Agent: Mozilla/5.0 \\(Macintosh; Intel Mac OS X 10_15_7\\) AppleWebKit/537.36\" \"https://financialmodelingprep.com/stable/earning-call-transcript?symbol=AAPL&year=2020&quarter=3&apikey=demo\")",
+      "Bash(curl -s \"https://financialmodelingprep.com/api/v4/earning_call_transcript?symbol=AAPL&apikey=demo\")",
+      "Bash(curl -s \"https://financialmodelingprep.com/api/v4/batch_earning_call_transcript/AAPL?year=2020&apikey=demo\")",
+      "Bash(curl -s \"https://financialmodelingprep.com/api/v3/profile/AAPL?apikey=demo\")",
+      "Bash(curl -s \"https://financialmodelingprep.com/api/v3/income-statement/AAPL?limit=1&apikey=demo\")",
+      "Bash(curl -s -L \"https://finnhub.io/docs/api/earnings-call-transcripts\")",
+      "Bash(curl -s -L \"https://finnhub.io/docs/api/transcripts-list\")",
+      "Bash(curl -s -L \"https://finnhub.io/pricing\")",
+      "WebFetch(domain:earningscalls.dev)",
+      "WebFetch(domain:becomingquant.com)",
+      "WebFetch(domain:dataglobehub.com)",
+      "Bash(pkill -f \"streamlit run\")"
+    ]
+  }
+}
