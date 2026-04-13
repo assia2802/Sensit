@@ -340,10 +340,15 @@ def analyze_sentiment(text: str) -> SentimentResult:
     evasive_count = sum(1 for phrase in EVASIVE_PHRASES if phrase in text_lower)
 
     # Density ratio scoring — spans [-1, +1] naturally
+    # Negative words are systematically underrepresented in RSS headlines/descriptions
+    # (journalists write in neutral/informational tone even for crisis stocks).
+    # A 1.5x weight on negative density compensates for this structural bias.
+    NEG_WEIGHT = 1.5
     epsilon = 0.001
     pos_density = pos_count / total
     neg_density = neg_count / total
-    net_score = (pos_density - neg_density) / (pos_density + neg_density + epsilon)
+    weighted_neg = NEG_WEIGHT * neg_density
+    net_score = (pos_density - weighted_neg) / (pos_density + weighted_neg + epsilon)
     net_score = round(max(-1.0, min(1.0, net_score)), 4)
 
     category_ratios = {

@@ -156,7 +156,7 @@ if analyze_btn:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        tone = "Bullish" if result.net_score > 0.1 else "Bearish" if result.net_score < -0.1 else "Neutral"
+        tone = "Positive Tone" if result.net_score > 0.1 else "Negative Tone" if result.net_score < -0.1 else "Mixed Tone"
         st.metric(
             "News Sentiment",
             f"{result.net_score:+.3f}",
@@ -176,10 +176,14 @@ if analyze_btn:
         st.metric("Headlines Analyzed", len(news))
 
     with col4:
-        pos = len([h for h in headline_scores if h["Sentiment"] > 0.15])
-        neg = len([h for h in headline_scores if h["Sentiment"] < -0.15])
-        st.metric("Bullish / Bearish", f"{pos} / {neg}")
+        pos = len([h for h in headline_scores if h["Sentiment"] > 0.1])
+        neg = len([h for h in headline_scores if h["Sentiment"] < -0.1])
+        st.metric("Positive / Negative Articles", f"{pos} / {neg}")
 
+    st.caption(
+        "⚠️ Scores reflect the language tone of news headlines and summaries, not investment recommendations. "
+        "Free RSS sources systematically underrepresent negative language — scores are calibrated accordingly."
+    )
     st.markdown("")
 
     # --- Row 2: Sentiment Gauge + Category Breakdown ---
