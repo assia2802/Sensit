@@ -8,6 +8,17 @@ financial contexts despite being negative in everyday language.
 
 Reference: Loughran, T. and McDonald, B. (2011). "When Is a Liability Not a Liability?
 Textual Analysis, Dictionaries, and 10-Ks." Journal of Finance, 66(1), 35-65.
+
+Fixes applied (v2):
+- net_score now normalizes against total words, not just matched words
+- Removed ambiguous/context-dependent words from POSITIVE
+  ("despite", "exploit", "record", "project", "save", "resolve", "invest",
+   "dominant", "surge", "top", "promise", "reform", "overcome", "generate")
+- Removed overlapping words from secondary lists to avoid double-counting:
+  "doubt", "volatile", "volatility", "uncertainty", "unusual", "unforeseen",
+  "susceptible", "unpredictable" removed from UNCERTAINTY (already in NEGATIVE)
+  "shall" removed from UNCERTAINTY (already in CONSTRAINING/STRONG_MODAL)
+  "reassess" removed from UNCERTAINTY (already in NEGATIVE)
 """
 
 import re
@@ -41,7 +52,7 @@ NEGATIVE = {
     "dissent", "dissolve", "distort", "distress", "disturb", "divert",
     "divest", "doubt", "downgrade", "downsize", "downturn", "drop", "drought",
     "dwindle", "dysfunction", "erode", "erosion", "error", "evict",
-    "exacerbate", "exaggerate", "excessive", "exclude", "exhaust", "exploit",
+    "exacerbate", "exaggerate", "excessive", "exclude", "exhaust",
     "expose", "exposure", "fail", "failure", "fallout", "false", "fatal",
     "fatality", "fault", "fear", "felony", "fine", "flaw", "flee", "flood",
     "forbid", "force", "foreclose", "forfeit", "fraud", "fraudulent",
@@ -70,7 +81,7 @@ NEGATIVE = {
     "penalize", "penalty", "peril", "persist", "petition", "plaintiff",
     "plead", "plummet", "poor", "poorly", "postpone", "precipitate",
     "preclude", "pressure", "problematic", "prohibit", "prosecution",
-    "protest", "punish", "punitive", "purport", "question", "questionable",
+    "protest", "punish", "punitive", "purport", "questionable",
     "reassess", "recall", "recession", "reckless", "recoup", "redress",
     "refusal", "refuse", "reject", "relinquish", "reluctant", "remediate",
     "repeal", "repossess", "repudiate", "resign", "restate", "restatement",
@@ -98,53 +109,60 @@ NEGATIVE = {
     "writeoff",
 }
 
+# FIX: Removed ambiguous words that fire too easily on neutral headlines:
+# "despite", "exploit", "record", "project", "save", "resolve", "invest",
+# "dominant", "surge", "top", "promise", "reform", "overcome", "generate"
 POSITIVE = {
-    "able", "abundance", "abundant", "accomplish", "accomplishment",
+    "abundance", "abundant", "accomplish", "accomplishment",
     "achieve", "achievement", "adequate", "advance", "advantage",
-    "alliance", "assure", "attain", "attract", "attractive", "beautiful",
+    "alliance", "assure", "attain", "attract", "attractive",
     "beneficial", "benefit", "benefiting", "best", "better", "bolster",
     "boom", "boost", "breakthrough", "bright", "champion", "collaborate",
     "commend", "commitment", "compelling", "competent", "complement",
     "compliment", "confident", "constructive", "creative", "creativity",
-    "delight", "deliver", "desirable", "despite", "diligent", "distinction",
-    "distinguish", "dominant", "earn", "ease", "easier", "easy", "efficiency",
+    "delight", "deliver", "desirable", "diligent", "distinction",
+    "distinguish", "earn", "ease", "easier", "easy", "efficiency",
     "efficient", "empower", "enable", "encourage", "encouraging", "endorse",
     "enhance", "enhancement", "enjoy", "enormous", "enthusiasm",
     "enthusiastic", "exceed", "excel", "excellent", "exceptional", "excite",
     "excitement", "exclusive", "exemplary", "expand", "expansion", "expert",
-    "exploit", "extraordinary", "favorable", "flagship", "flourish", "gain",
-    "generate", "good", "great", "greater", "greatest", "grow", "growing",
-    "growth", "guarantee", "happy", "highest", "honor", "ideal",
+    "extraordinary", "favorable", "flagship", "flourish", "gain",
+    "good", "great", "greater", "greatest", "grow", "growing",
+    "growth", "guarantee", "happy", "honor", "ideal",
     "imagination", "impressive", "improve", "improvement", "increase",
     "incredible", "influential", "ingenuity", "innovate", "innovation",
     "innovative", "insight", "instrumental", "integrity", "invent",
-    "invention", "inventive", "invest", "leadership", "leading", "lucrative",
+    "invention", "inventive", "leadership", "leading", "lucrative",
     "mastery", "maximize", "merit", "milestone", "momentum", "notable",
     "noteworthy", "nurture", "opportunity", "optimal", "optimism",
     "optimistic", "outpace", "outperform", "outperformance", "outstanding",
-    "overcome", "perfect", "pioneer", "pleased", "pleasure", "popular",
+    "perfect", "pioneer", "pleased", "pleasure", "popular",
     "positive", "praise", "premium", "proactive", "proficiency",
     "proficient", "profit", "profitable", "profitability", "progress",
-    "prominent", "promise", "promising", "propel", "prosper", "prosperity",
-    "prosperous", "proud", "rebound", "record", "recovery", "refine",
-    "reform", "remarkable", "resilient", "resolve", "respect", "restore",
+    "prominent", "promising", "propel", "prosper", "prosperity",
+    "prosperous", "proud", "rebound", "recovery", "refine",
+    "remarkable", "resilient", "respect", "restore",
     "revitalize", "revolution", "revolutionize", "reward", "rewarding",
-    "robust", "satisfaction", "satisfy", "save", "smooth", "solid",
+    "robust", "satisfaction", "satisfy", "smooth", "solid",
     "solution", "solve", "stability", "stable", "stellar", "strength",
     "strengthen", "strong", "stronger", "strongest", "succeed", "success",
-    "successful", "superior", "support", "surge", "surpass", "sustainable",
-    "synergy", "talent", "thrive", "top", "transform", "transformation",
+    "successful", "superior", "support", "surpass", "sustainable",
+    "synergy", "talent", "thrive", "transform", "transformation",
     "tremendous", "triumph", "trust", "unmatched", "unparalleled", "upgrade",
     "upside", "upturn", "valuable", "value", "versatile", "vibrant",
     "victory", "vigorous", "visionary", "win", "winner", "winning",
     "worthwhile",
 }
 
+# FIX: Removed words already present in NEGATIVE to avoid double-counting:
+# "doubt", "volatile", "volatility", "uncertainty", "unusual", "unforeseen",
+# "susceptible", "unpredictable", "reassess"
+# Also removed "shall" (already in CONSTRAINING and STRONG_MODAL)
 UNCERTAINTY = {
     "almost", "anticipate", "apparent", "appear", "approximate",
     "approximately", "assume", "assumption", "believe", "cautious",
     "conceivable", "conditional", "contingent", "could", "depend",
-    "depending", "doubt", "estimate", "estimated", "eventual", "eventually",
+    "depending", "estimate", "estimated", "eventual", "eventually",
     "expect", "expectation", "fluctuate", "fluctuation", "forecast",
     "foreseeable", "hope", "hopeful", "hopefully", "if", "imprecise",
     "imprecision", "indefinite", "indeterminate", "inexact", "intend",
@@ -152,14 +170,14 @@ UNCERTAINTY = {
     "occasionally", "ought", "outlook", "pending", "perceive", "perhaps",
     "possible", "possibly", "potential", "potentially", "predict",
     "prediction", "predictive", "preliminary", "presumably", "presume",
-    "probable", "probably", "project", "projected", "projection", "prospect",
-    "random", "reassess", "reconsider", "roughly", "seem", "seldom",
-    "shall", "should", "sometimes", "somewhat", "soon", "speculate",
-    "speculation", "suggest", "suppose", "susceptible", "tend", "tentative",
-    "uncertain", "uncertainty", "unclear", "undecided", "undefined",
-    "undetermined", "unforeseeable", "unforeseen", "unknown",
-    "unpredictable", "unproven", "unquantifiable", "unspecified", "unusual",
-    "variable", "variability", "vary", "volatile", "volatility", "would",
+    "probable", "probably", "projected", "projection", "prospect",
+    "random", "reconsider", "roughly", "seem", "seldom",
+    "should", "sometimes", "somewhat", "soon", "speculate",
+    "speculation", "suggest", "suppose", "tend", "tentative",
+    "unclear", "undecided", "undefined",
+    "undetermined", "unforeseeable",
+    "unknown", "unproven", "unquantifiable", "unspecified",
+    "variable", "variability", "vary", "would",
 }
 
 LITIGIOUS = {
@@ -338,34 +356,35 @@ def analyze_sentiment(text: str) -> SentimentResult:
     unc_matches = [t for t in tokens if t in UNCERTAINTY]
     lit_matches = [t for t in tokens if t in LITIGIOUS]
     con_matches = [t for t in tokens if t in CONSTRAINING]
-    sm_matches = [t for t in tokens if t in STRONG_MODAL]
-    wm_matches = [t for t in tokens if t in WEAK_MODAL]
+    sm_matches  = [t for t in tokens if t in STRONG_MODAL]
+    wm_matches  = [t for t in tokens if t in WEAK_MODAL]
 
     pos_count = len(pos_matches)
     neg_count = len(neg_matches)
     unc_count = len(unc_matches)
     lit_count = len(lit_matches)
     con_count = len(con_matches)
-    sm_count = len(sm_matches)
-    wm_count = len(wm_matches)
+    sm_count  = len(sm_matches)
+    wm_count  = len(wm_matches)
 
     # Count evasive phrases
     text_lower = text.lower()
     evasive_count = sum(1 for phrase in EVASIVE_PHRASES if phrase in text_lower)
 
-    # Net sentiment score: [-1, 1]
-    denom = pos_count + neg_count
-    net_score = (pos_count - neg_count) / denom if denom > 0 else 0.0
+    # FIX: Net sentiment score normalised against ALL words, not just matched ones.
+    # Old formula: (pos - neg) / (pos + neg)  → inflates score on sparse text
+    # New formula: (pos - neg) / total         → honest signal, naturally closer to 0
+    net_score = (pos_count - neg_count) / total
 
     # Category ratios (per 1000 words for readability)
     category_ratios = {
-        "Positive": round(pos_count / total * 1000, 2),
-        "Negative": round(neg_count / total * 1000, 2),
+        "Positive":    round(pos_count / total * 1000, 2),
+        "Negative":    round(neg_count / total * 1000, 2),
         "Uncertainty": round(unc_count / total * 1000, 2),
-        "Litigious": round(lit_count / total * 1000, 2),
-        "Constraining": round(con_count / total * 1000, 2),
-        "Strong Modal": round(sm_count / total * 1000, 2),
-        "Weak Modal": round(wm_count / total * 1000, 2),
+        "Litigious":   round(lit_count / total * 1000, 2),
+        "Constraining":round(con_count / total * 1000, 2),
+        "Strong Modal":round(sm_count  / total * 1000, 2),
+        "Weak Modal":  round(wm_count  / total * 1000, 2),
     }
 
     # Flagged sentences — top 10 most sentiment-dense
@@ -391,11 +410,11 @@ def analyze_sentiment(text: str) -> SentimentResult:
 
     # Unique matched words per category
     word_matches = {
-        "Positive": sorted(set(pos_matches)),
-        "Negative": sorted(set(neg_matches)),
+        "Positive":    sorted(set(pos_matches)),
+        "Negative":    sorted(set(neg_matches)),
         "Uncertainty": sorted(set(unc_matches)),
-        "Litigious": sorted(set(lit_matches)),
-        "Constraining": sorted(set(con_matches)),
+        "Litigious":   sorted(set(lit_matches)),
+        "Constraining":sorted(set(con_matches)),
     }
 
     return SentimentResult(
