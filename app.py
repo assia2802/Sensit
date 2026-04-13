@@ -135,13 +135,14 @@ if analyze_btn:
         st.stop()
 
     # Run sentiment on all headlines combined
-    all_headlines = " . ".join(a["title"] for a in news)
-    result = analyze_sentiment(all_headlines)
+    # Use full text (title + description) for richer sentiment signal
+    all_text = " . ".join(a["text"] for a in news)
+    result = analyze_sentiment(all_text)
 
     # Also score each headline individually for the table
     headline_scores = []
     for a in news:
-        h_result = analyze_sentiment(a["title"])
+        h_result = analyze_sentiment(a["text"])
         headline_scores.append({
             "Headline": a["title"],
             "Source": a["source"],
@@ -155,7 +156,7 @@ if analyze_btn:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        tone = "Bullish" if result.net_score > 0.15 else "Bearish" if result.net_score < -0.15 else "Neutral"
+        tone = "Bullish" if result.net_score > 0.05 else "Bearish" if result.net_score < -0.05 else "Neutral"
         st.metric(
             "News Sentiment",
             f"{result.net_score:+.3f}",

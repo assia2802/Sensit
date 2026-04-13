@@ -3,23 +3,39 @@ Data fetchers for financial news and stock prices.
 All sources are 100% free — no API key, no signup required.
 
 News: Google News RSS + Yahoo Finance RSS
+      Now extracts <description> tags (article summaries, ~100-200 words)
+      in addition to titles, giving the LM lexicon far more signal to work with.
+
 Prices: Yahoo Finance Chart API
 """
 
 import requests
 import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
+import re
+from datetime import datetime
+
+
+def _clean_html(text: str) -> str:
+    """Strip HTML tags from RSS description fields."""
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 
 def fetch_news(ticker: str, company_name: str = "") -> list[dict]:
     """
-    Fetch recent news headlines for a ticker from Google News + Yahoo Finance RSS.
-    Returns list of dicts with 'title', 'source', 'date'.
+    Fetch recent news for a ticker from Google News + Yahoo Finance RSS.
+    Each article returns 'title', 'description', 'text' (title + description),
+    'source', 'date'.
+
+    'text' is what gets passed to analyze_sentiment — it combines the title
+    and the article summary/description for a much richer signal than
+    headlines alone.
     """
     headers = {"User-Agent": "Mozilla/5.0"}
     articles = []
 
-    # Google News RSS
+    # --- Google News RSS ---
     query = f"{ticker} stock" if not company_name else f"{company_name} {ticker} stock"
     google_url = f"https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
     try:
@@ -27,39 +43,53 @@ def fetch_news(ticker: str, company_name: str = "") -> list[dict]:
         if resp.status_code == 200:
             root = ET.fromstring(resp.text)
             for item in root.findall(".//item"):
-                title = item.find("title")
-                pub = item.find("pubDate")
-                source = item.find("source")
-                if title is not None and title.text:
+                title_el = item.find("title")
+                desc_el   = item.find("description")
+                pub_el    = item.find("pubDate")
+                source_el = item.find("source")
+
+                title = title_el.text.strip() if title_el is not None and title_el.text else ""
+                desc  = _clean_html(desc_el.text) if desc_el is not None and desc_el.text else ""
+
+                if title:
                     articles.append({
-                        "title": title.text.strip(),
-                        "source": source.text.strip() if source is not None and source.text else "Google News",
-                        "date": pub.text.strip() if pub is not None and pub.text else "",
-                        "feed": "google",
+                        "title":       title,
+                        "description": desc,
+                        "text":        f"{title}. {desc}".strip(),
+                        "source":      source_el.text.strip() if source_el is not None and source_el.text else "Google News",
+                        "date":        pub_el.text.strip() if pub_el is not None and pub_el.text else "",
+                        "feed":        "google",
                     })
     except Exception:
         pass
 
-    # Yahoo Finance RSS
+    # --- Yahoo Finance RSS ---
     yahoo_url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
     try:
         resp = requests.get(yahoo_url, headers=headers, timeout=10)
         if resp.status_code == 200:
             root = ET.fromstring(resp.text)
             for item in root.findall(".//item"):
-                title = item.find("title")
-                pub = item.find("pubDate")
-                if title is not None and title.text:
+                title_el = item.find("title")
+                desc_el   = item.find("description")
+                pub_el    = item.find("pubDate")
+
+                title = title_el.text.strip() if title_el is not None and title_el.text else ""
+                desc  = _clean_html(desc_el.text) if desc_el is not None and desc_el.text else ""
+
+                if title:
                     articles.append({
-                        "title": title.text.strip(),
-                        "source": "Yahoo Finance",
-                        "date": pub.text.strip() if pub is not None and pub.text else "",
-                        "feed": "yahoo",
+                        "title":       title,
+                        "description": desc,
+                        "text":        f"{title}. {desc}".strip(),
+                        "source":      "Yahoo Finance",
+                        "date":        pub_el.text.strip() if pub_el is not None and pub_el.text else "",
+                        "feed":        "yahoo",
                     })
     except Exception:
         pass
 
-    # Deduplicate by title
+    # --- Deduplicate by title ---
     seen = set()
     unique = []
     for a in articles:
@@ -74,7 +104,7 @@ def fetch_news(ticker: str, company_name: str = "") -> list[dict]:
 def fetch_stock_prices(ticker: str, period: str = "1mo") -> dict | None:
     """
     Fetch historical stock prices from Yahoo Finance.
-    period: '5d', '1mo', '3mo', '6mo', '1y'
+    period: '5d', '1mo', '3mo'
     Returns dict with 'dates', 'closes', 'change_pct', 'current', 'period_start'.
     """
     url = f"https://query1.finance.yahoo.com/v8/finance/chart/{ticker.upper()}"
@@ -90,7 +120,6 @@ def fetch_stock_prices(ticker: str, period: str = "1mo") -> dict | None:
         timestamps = result["timestamp"]
         closes = result["indicators"]["quote"][0]["close"]
 
-        # Clean nulls
         dates = []
         prices = []
         for ts, c in zip(timestamps, closes):
@@ -105,13 +134,13 @@ def fetch_stock_prices(ticker: str, period: str = "1mo") -> dict | None:
         change_pct = round((change / prices[0]) * 100, 2)
 
         return {
-            "dates": dates,
-            "closes": prices,
-            "current": prices[-1],
+            "dates":        dates,
+            "closes":       prices,
+            "current":      prices[-1],
             "period_start": prices[0],
-            "change": round(change, 2),
-            "change_pct": change_pct,
-            "ticker": ticker.upper(),
+            "change":       round(change, 2),
+            "change_pct":   change_pct,
+            "ticker":       ticker.upper(),
         }
     except Exception:
         return None

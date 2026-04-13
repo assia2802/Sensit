@@ -371,10 +371,11 @@ def analyze_sentiment(text: str) -> SentimentResult:
     text_lower = text.lower()
     evasive_count = sum(1 for phrase in EVASIVE_PHRASES if phrase in text_lower)
 
-    # FIX: Net sentiment score normalised against ALL words, not just matched ones.
+    # FIX: Net sentiment score normalised against ALL words, scaled, and clamped.
     # Old formula: (pos - neg) / (pos + neg)  → inflates score on sparse text
-    # New formula: (pos - neg) / total         → honest signal, naturally closer to 0
-    net_score = (pos_count - neg_count) / total
+    # New formula: (pos - neg) / total * 10   → honest signal, scaled to [-1, 1]
+    net_score = (pos_count - neg_count) / total * 10
+    net_score = max(-1.0, min(1.0, net_score))  # clamp to [-1, 1]
 
     # Category ratios (per 1000 words for readability)
     category_ratios = {
