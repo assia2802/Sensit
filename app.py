@@ -123,7 +123,7 @@ if analyze_btn:
     # Fetch all data
     with st.spinner(f"Fetching data for {ticker}..."):
         company_name = fetch_company_name(ticker)
-        news = fetch_news(ticker, company_name)
+        news = fetch_news(ticker, company_name, period)
         prices = fetch_stock_prices(ticker, period)
 
     if not news:
@@ -156,7 +156,16 @@ if analyze_btn:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        tone = "Positive Tone" if result.net_score > 0.1 else "Negative Tone" if result.net_score < -0.1 else "Mixed Tone"
+        if result.net_score > 0.2:
+            tone = "Positive Tone"
+        elif result.net_score < -0.2:
+            tone = "Negative Tone"
+        elif result.net_score > 0.05:
+            tone = "Slightly Positive"
+        elif result.net_score < -0.05:
+            tone = "Slightly Negative"
+        else:
+            tone = "Mixed Tone"
         st.metric(
             "News Sentiment",
             f"{result.net_score:+.3f}",
