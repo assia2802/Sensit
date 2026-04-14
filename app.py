@@ -26,6 +26,10 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
+    /* Hide delta arrows on all metrics — color alone conveys direction */
+    [data-testid="stMetricDelta"] svg {
+        display: none !important;
+    }
     .main-header {
         font-size: 2.2rem;
         font-weight: 700;
@@ -170,7 +174,7 @@ if analyze_btn:
             "News Sentiment",
             f"{result.net_score:+.3f}",
             delta=tone,
-            delta_color="normal" if result.net_score > 0 else "inverse",
+            delta_color="normal" if result.net_score >= 0 else "inverse",
         )
 
     with col2:
@@ -178,7 +182,7 @@ if analyze_btn:
             "Stock Price",
             f"${prices['current']:.2f}",
             delta=f"{prices['change_pct']:+.1f}%",
-            delta_color="normal" if prices['change_pct'] >= 0 else "inverse",
+            delta_color="normal",
         )
 
     with col3:
